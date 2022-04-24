@@ -1,0 +1,2 @@
+qemu-system-x86_64 -drive file=os,if=floppy,index=0,format=raw
+
