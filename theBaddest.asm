@@ -1,57 +1,102 @@
+include '/Users/korra/fasmlib/80386.inc'
+org 0x0
 start:
-	call sgmnt.setDSgmnt
-	call screen.setVRAM
-	call screen.setVideoMode
-	call screen.clearVRAM
-	call screen.setColor
+	call segment.set_segments
+	call segment.set_vram
+	call screen.set_video_mode
+	call screen.clear_vram
+	call screen.set_color
 	
 	mov si,msg
-	call screen.printString
-	jmp $
+	call screen.print_f
+	mov si,msg2
+	call screen.print_f
+	cli
+	hlt
 
-sgmnt:
-	.setDSgmnt:
-		mov ax,0x60
+segment:
+	.set_segments:
+		push ax
+		mov ax,0x1000
 		mov ds,ax
-		ret
-
-screen:	
-	.setVideoMode:
-		mov ah,00
-		mov al,03
-		int 10h
-		ret
-	.setVRAM:
-		mov ax,0xb800
 		mov es,ax
-		mov bx,0000
+		pop ax
 		ret
-	.setColor:
-		mov bx,0001
-		mov cx,2000
-		mov ah,0x0d
-		.lp1:
-			mov [es:bx],ah
-			add bx,2
-			loop .lp1
+	.set_vram:
+		push ax
+		mov ax,0xb800
+		mov gs,ax
+		mov di,0x0000
+		pop ax
 		ret
-	.clearVRAM:
-		mov bx,0000
-		mov cx,2000
-		.lb2:
-			mov [es:bx],byte 00
-			add bx,2
-			loop .lb2
+screen:	
+	.set_video_mode:
+		push ax
+		mov ah,0x0
+		mov al,0x3
+		int 10h
+		pop ax
 		ret
-	
-	.printString:
-		mov bx,0000
-		.lp3:
+	.set_color:
+		push ax
+		push di
+		push cx
+		mov di,0x1
+		mov ah,0x0c
+		mov cx,0x7d0
+		.set_color.loop:
+			mov [gs:di],ah
+			add di,2
+			loop .set_color.loop
+		pop cx
+		pop di
+		pop ax
+		ret
+	.clear_vram:
+		push di
+		push cx
+		mov di,0x0
+		mov cx,0x7d0
+		.clear_vram.loop:
+			mov byte [gs:di],0x0
+			add di,2
+			loop .clear_vram.loop
+		pop cx
+		pop di
+		ret
+	.print_f:
+		push ax
+		push bx
+		push dx
+		.cond:
 			lodsb
-			mov [es:bx],al
-			add bx,2
-			cmp al,0
-			jne .lp3
-		ret
-msg db "Kernel Yuklendi",0
-db 512-$ dup 0
+			cmp al,0x0
+			je .end
+			cmp al,0x5c
+			je .cond2
+			mov [gs:di],al
+			add di,2
+			jmp .cond
+		.cond2:
+			lodsb
+			cmp al,0x6e
+			je .new_line
+			jmp .cond
+		.new_line:
+			xor dx,dx
+			mov [gs:di],dl
+			add di,2
+			mov ax,di
+			mov bx,0xa0
+			div bx
+			cmp dx,0x0
+			jne .new_line
+			jmp .cond
+		.end:
+			pop dx
+			pop bx
+			pop ax
+			ret
+msg db "Kernel \n\nYuklendi",0
+msg2 db "\nCAUSE THAT'S WHAT THE BADDEST DO",0
+db 512-($-$$) dup 0
