@@ -1,7 +1,7 @@
-BOOTSRC = popstar.asm
-KERNELSRC = theBaddest.asm
-BOOT = popstar
-KERNEL = theBaddest
+BOOTSRC = bootldr.asm
+KERNELSRC = kernel.asm
+BOOT = bootldr
+KERNEL = kernel
 NAME = KDAos
 ASMB = fasmg
 
