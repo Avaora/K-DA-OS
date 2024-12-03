@@ -1,34 +1,20 @@
-BOOTSRC = bootldr.asm
-KERNELSRC = kernel.asm
-BOOT = bootldr
-KERNEL = kernel
-NAME = KDAos
-ASMB = fasmg
+AS = fasmg
+SRCS = bootld_f.asm bootld_s.asm
+OBJS = $(basename $(SRCS))
+NAME = kdaOS
+RM = rm -rf
 
-all : $(NAME)
+.PHONY: all clean fclean re
 
-$(NAME) : $(BOOT) $(KERNEL)
-	@echo "=============="
-	dd if=./$(BOOT) of=./$(NAME) bs=512 count=1
-	@echo "=============="
-	dd if=./$(KERNEL) of=./$(NAME) bs=512 count=1 seek=1
+all: $(NAME)
 
-$(BOOT) : $(BOOTSRC)
-	@echo "=============="
-	@echo "assembling bootloader"
-	$(ASMB) $(BOOTSRC)
-
-$(KERNEL) : $(KERNELSRC)
-	@echo "=============="
-	@echo "assembling kernel"
-	$(ASMB) $(KERNELSRC)
-
-clean :
-	rm -f $(BOOT) $(KERNEL)
-
-fclean : clean
-	rm -f $(NAME)
-
-re : fclean all
-
-.PHONY : all clean fclean re
+$(NAME): $(OBJS)
+	dd if=./bootld_f of=./$(NAME) bs=512 count=1
+	dd if=./bootld_s of=./$(NAME) bs=512 count=1 seek=1
+$(OBJS): % : %.asm
+	$(ASMB) $< $@
+clean:
+	$(RM) $(OBJS)
+fclean: clean
+	$(RM) $(NAME)
+re: fclean all
